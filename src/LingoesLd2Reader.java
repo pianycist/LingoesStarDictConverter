@@ -57,7 +57,9 @@ public class LingoesLd2Reader {
             new SensitiveStringDecoder(Charset.forName("EUC-JP")) };
 
     public static void main(final String[] args) throws IOException {
-        final String ld2File = "E:/FTP/LingoesDict/Vicon Russian-English Dictionary.ld2";
+        //final String ld2File = "dictionary.ld2";
+        //originally input filename was hardcoded 
+        final String ld2File = args[0] + ".ld2";
         // read lingoes ld2 into byte array
         final ByteBuffer dataRawBytes;
         RandomAccessFile file = new RandomAccessFile(ld2File, "r");
@@ -68,19 +70,19 @@ public class LingoesLd2Reader {
         dataRawBytes.order(ByteOrder.LITTLE_ENDIAN);
         dataRawBytes.rewind();
 
-        System.out.println("文件：" + ld2File);
-        System.out.println("类型："
+        System.out.println("File：" + ld2File);
+        System.out.println("Type："
                 + new String(dataRawBytes.array(), 0, 4, "ASCII"));
-        System.out.println("版本：" + dataRawBytes.getShort(0x18) + "."
+        System.out.println("Version:：" + dataRawBytes.getShort(0x18) + "."
                 + dataRawBytes.getShort(0x1A));
         System.out.println("ID: 0x"
                 + Long.toHexString(dataRawBytes.getLong(0x1C)));
 
         final int offsetData = dataRawBytes.getInt(0x5C) + 0x60;
         if (dataRawBytes.limit() > offsetData) {
-            System.out.println("简介地址：0x" + Integer.toHexString(offsetData));
+            System.out.println("Introduction address：0x" + Integer.toHexString(offsetData));
             final int type = dataRawBytes.getInt(offsetData);
-            System.out.println("简介类型：0x" + Integer.toHexString(type));
+            System.out.println("Profile Type：0x" + Integer.toHexString(type));
             final int offsetWithInfo = dataRawBytes.getInt(offsetData + 4)
                     + offsetData + 12;
             if (type == 3) {
@@ -91,10 +93,10 @@ public class LingoesLd2Reader {
                 LingoesLd2Reader.readDictionary(ld2File, dataRawBytes,
                         offsetWithInfo);
             } else {
-                System.err.println("文件不包含字典数据。网上字典？");
+                System.err.println("The file does not contain dictionary data. Online dictionary?");
             }
         } else {
-            System.err.println("文件不包含字典数据。网上字典？");
+            System.err.println("The file does not contain dictionary data. Online dictionary?");
         }
     }
 
@@ -128,9 +130,9 @@ public class LingoesLd2Reader {
                                 LingoesLd2Reader.AVAIL_ENCODINGS[k], idxData,
                                 defData, i);
                     }
-                    System.out.println("词组编码："
+                    System.out.println("Encoding："
                             + LingoesLd2Reader.AVAIL_ENCODINGS[j].name);
-                    System.out.println("XML编码："
+                    System.out.println("XML encoding："
                             + LingoesLd2Reader.AVAIL_ENCODINGS[k].name);
                     return new SensitiveStringDecoder[] {
                             LingoesLd2Reader.AVAIL_ENCODINGS[j],
@@ -140,7 +142,7 @@ public class LingoesLd2Reader {
                 }
             }
         }
-        System.err.println("自动识别编码失败！选择UTF-16LE继续。");
+        System.err.println("Failed to automatically recognize encoding! Choose UTF-16LE to continue.");
         return new SensitiveStringDecoder[] {
                 LingoesLd2Reader.AVAIL_ENCODINGS[1],
                 LingoesLd2Reader.AVAIL_ENCODINGS[1] };
@@ -155,7 +157,7 @@ public class LingoesLd2Reader {
 
             throws IOException, FileNotFoundException,
             UnsupportedEncodingException {
-        System.out.println("写入'" + extractedOutputFile + "'。。。");
+        System.out.println("Writing " + extractedOutputFile + " 。。。");
         int counter = 0;
         //解压后的文件
         RandomAccessFile file = new RandomAccessFile(inflatedFile, "r");
@@ -232,7 +234,7 @@ public class LingoesLd2Reader {
         infomationFileWriter.flush();
         indexWriter.flush();
         outputWriter.flush();
-        System.out.println("成功读出" + counter + "组数据。");
+        System.out.println("Successfully wrote " + counter + " data。");
     }
 
     private static void getIdxData(final ByteBuffer dataRawBytes,
@@ -248,8 +250,8 @@ public class LingoesLd2Reader {
 
     private static void inflate(final ByteBuffer dataRawBytes,
                                       final List<Integer> deflateStreams, final String inflatedFile) {
-        System.out.println("解压缩'" + deflateStreams.size() + "'个数据流至'"
-                + inflatedFile + "'。。。");
+        System.out.println("Unzipping " + deflateStreams.size() + " B to "
+                + inflatedFile + "。。。");
         final int startOffset = dataRawBytes.position();
         int offset = -1;
         int lastOffset = startOffset;
@@ -263,7 +265,7 @@ public class LingoesLd2Reader {
                 lastOffset = offset;
             }
         } catch (final Throwable e) {
-            System.err.println("解压缩失败: 0x" + Integer.toHexString(offset) + ": "
+            System.err.println("Unzip failed: 0x" + Integer.toHexString(offset) + ": "
                     + e.toString());
         }
     }
@@ -314,7 +316,7 @@ public class LingoesLd2Reader {
                                        final ByteBuffer dataRawBytes,
                                        final int offsetWithIndex)
             throws IOException, FileNotFoundException, UnsupportedEncodingException {
-        System.out.println("词典类型：0x"
+        System.out.println("Dictionary type：0x"
                 + Integer.toHexString(dataRawBytes.getInt(offsetWithIndex)));
         final int limit = dataRawBytes.getInt(offsetWithIndex + 4)
                 + offsetWithIndex + 8;
@@ -335,23 +337,23 @@ public class LingoesLd2Reader {
             deflateStreams.add(Integer.valueOf(offset));
         }
         final int offsetCompressedData = dataRawBytes.position();
-        System.out.println("索引词组数目：" + definitions);
-        System.out.println("索引地址/大小：0x" + Integer.toHexString(offsetIndex)
+        System.out.println("Number of definitions：" + definitions);
+        System.out.println("Index address/size：0x" + Integer.toHexString(offsetIndex)
                 + " / " + (offsetCompressedDataHeader - offsetIndex) + " B");
-        System.out.println("压缩数据地址/大小：0x"
+        System.out.println("Compressed data address/size：0x"
                 + Integer.toHexString(offsetCompressedData) + " / "
                 + (limit - offsetCompressedData) + " B");
-        System.out.println("词组索引地址/大小（解压缩后）：0x0 / " + inflatedWordsIndexLength
+        System.out.println("Phrase index address/size（after decompression）：0x0 / " + inflatedWordsIndexLength
                 + " B");
-        System.out.println("词组地址/大小（解压缩后）：0x"
+        System.out.println("Phrase address/size（after decompression）：0x"
                 + Integer.toHexString(inflatedWordsIndexLength) + " / "
                 + inflatedWordsLength + " B");
-        System.out.println("XML地址/大小（解压缩后）：0x"
+        System.out.println("XML address/size（after decompression）：0x"
                 + Integer.toHexString(inflatedWordsIndexLength
                 + inflatedWordsLength) + " / " + inflatedXmlLength
                 + " B");
         System.out
-                .println("文件大小（解压缩后）："
+                .println("File size（after decompression）："
                         + ((inflatedWordsIndexLength + inflatedWordsLength + inflatedXmlLength) / 1024)
                         + " KB");
         final String inflatedFile = ld2File + ".inflated";
