@@ -1,5 +1,7 @@
 # LingoesStarDictConverter
 
+This fork takes an ld2 file (without the .ld2 extension) as an argument, and is also a translation to English in progress.
+
 这个项目会把灵格斯Lingoes的LD2文件转制成星际王StarDict的格式。只是改动了Xiaoyun Zhu的源码，英文、德文字典测试可以使用，俄文好像有编码问题，未来会改进。
 
 # 使用
